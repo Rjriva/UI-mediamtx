@@ -57,11 +57,14 @@ services:
       # UI Port
       - PORT=3000
     volumes:
-      # Mount your UI application code
+      # Mount your UI application code here
+      # Place your Node.js application in ./ui-app directory
+      # It should contain package.json with a "start" script
       - ./ui-app:/app
-      # Persist node_modules
+      # Persist node_modules for faster rebuilds
       - ui-node-modules:/app/node_modules
-    # Command to install dependencies and start the app
+    # Note: This is a simple approach for development
+    # For production, use a proper Dockerfile with pre-installed dependencies
     command: sh -c "npm install && npm start"
     depends_on:
       mediamtx:

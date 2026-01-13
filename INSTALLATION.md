@@ -163,7 +163,9 @@ For detailed configuration options, see [CONFIGURATION.md](CONFIGURATION.md).
 
 ### UI Application Setup
 
-If you're using a custom UI application:
+**Important**: The `ui-mediamtx` service in `docker-compose.yml` is a template that expects you to provide your own UI application code.
+
+If you're developing a custom UI application:
 
 1. Place your UI application code in the `./ui-app` directory
 2. Ensure it has a `package.json` with a `start` script
@@ -177,6 +179,13 @@ ui-app/
 └── public/
     └── index.html
 ```
+
+**Note**: If you don't have a UI application ready, you can:
+- Comment out the `ui-mediamtx` service in `docker-compose.yml` and just run MediaMTX
+- Access MediaMTX directly via its API at http://localhost:9997
+- Use the MediaMTX built-in web interface (if available in your version)
+
+For production deployments, replace the simple `command` with a proper Dockerfile that pre-installs dependencies.
 
 ## Starting the Application
 

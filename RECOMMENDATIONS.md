@@ -100,15 +100,20 @@ sudo ufw status numbered
 
 Update `.env`:
 ```bash
-# Generate strong passwords
-ADMIN_PASSWORD=$(openssl rand -base64 32)
-PUBLISH_PASSWORD=$(openssl rand -base64 32)
-READ_PASSWORD=$(openssl rand -base64 32)
+# Generate strong passwords and save to file directly
+# Note: Clear your shell history after this to remove passwords
+openssl rand -base64 32 | sed 's/^/ADMIN_PASSWORD=/' >> .env
+openssl rand -base64 32 | sed 's/^/PUBLISH_PASSWORD=/' >> .env
+openssl rand -base64 32 | sed 's/^/READ_PASSWORD=/' >> .env
 
-# Store securely
-echo "ADMIN_PASSWORD=${ADMIN_PASSWORD}" >> .env.production
-echo "PUBLISH_PASSWORD=${PUBLISH_PASSWORD}" >> .env.production
-echo "READ_PASSWORD=${READ_PASSWORD}" >> .env.production
+# Set proper permissions
+chmod 600 .env
+
+# Clear shell history to remove password generation commands
+history -c
+
+# Alternatively, use a password manager to generate and store passwords,
+# then manually add them to .env file
 ```
 
 ### 3. Enable HTTPS with Nginx Reverse Proxy
