@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: mediamtx
+    restart: unless-stopped
+    ports:
+      # SRT port
+      - "10000:10000/udp"
+      # RTSP port
+      - "8554:8554"
+      # API port
+      - "9997:9997"
+      # HLS port (optional)
+      - "8888:8888"
+      # WebRTC port (optional)
+      - "8889:8889"
+    environment:
+      # Enable API
+      - MTX_API=yes
+      # API address
+      - MTX_APIADDRESS=:9997
+      # Enable SRT protocol
+      - MTX_PROTOCOLS=tcp,udp,srt
+      # SRT address
+      - MTX_SRTADDRESS=:10000
+      # Enable authentication (optional)
+      # - MTX_PATHS_ALL_READUSER=admin
+      # - MTX_PATHS_ALL_READPASS=changeme
+    volumes:
+      # Persist MediaMTX configuration
+      - ./mediamtx-config:/config
+      # Optional: store recordings
+      - ./mediamtx-recordings:/recordings
+    networks:
+      - mediamtx-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9997/v3/config/get"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  ui-mediamtx:
+    image: node:18-alpine
+    container_name: ui-mediamtx
+    restart: unless-stopped
+    working_dir: /app
+    ports:
+      # UI port
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # MediaMTX API URL (internal network)
+      - MEDIAMTX_API_URL=http://mediamtx:9997
+      # UI Port
+      - PORT=3000
+    volumes:
+      # Mount your UI application code
+      - ./ui-app:/app
+      # Persist node_modules
+      - ui-node-modules:/app/node_modules
+    # Command to install dependencies and start the app
+    command: sh -c "npm install && npm start"
+    depends_on:
+      mediamtx:
+        condition: service_healthy
+    networks:
+      - mediamtx-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  mediamtx-network:
+    driver: bridge
+
+volumes:
+  ui-node-modules:
+    driver: local
