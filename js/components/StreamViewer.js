@@ -84,7 +84,8 @@ class StreamViewer {
 
         // Attach delete button event listeners
         this.channels.forEach(channel => {
-            const deleteBtn = document.getElementById(`delete-${channel.name}`);
+            const safeId = channel.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const deleteBtn = document.getElementById(`delete-${safeId}`);
             if (deleteBtn) {
                 deleteBtn.addEventListener('click', () => {
                     ChannelActions.deleteChannel(channel.name);
@@ -97,9 +98,11 @@ class StreamViewer {
         const source = channel.source || 'Not configured';
         const publishUser = channel.publishUser || 'None';
         const readUser = channel.readUser || 'None';
+        // Create a safe ID by replacing invalid characters
+        const safeId = channel.name.replace(/[^a-zA-Z0-9_-]/g, '_');
         
         return `
-            <div class="channel-card">
+            <div class="channel-card" data-channel-name="${escapeHtml(channel.name)}">
                 <div class="channel-header">
                     <div class="channel-name">${escapeHtml(channel.name)}</div>
                 </div>
@@ -120,7 +123,7 @@ class StreamViewer {
                 </div>
                 
                 <div class="channel-actions">
-                    <button id="delete-${escapeHtml(channel.name)}" class="btn btn-danger btn-small">
+                    <button id="delete-${safeId}" class="btn btn-danger btn-small">
                         Delete Channel
                     </button>
                 </div>

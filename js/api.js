@@ -94,7 +94,7 @@ class MediaMTXAPI {
             
             return null;
         } catch (error) {
-            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
                 throw new Error('Cannot connect to server. Please check the server URL and CORS settings.');
             }
             throw error;

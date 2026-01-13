@@ -11,6 +11,8 @@ class ConnectionManager {
         this.container = document.getElementById(containerId);
         this.connections = [];
         this.refreshInterval = null;
+        this.failureCount = 0;
+        this.maxFailures = 3;
         this.render();
         this.loadConnections();
         this.startAutoRefresh();
@@ -27,11 +29,18 @@ class ConnectionManager {
         try {
             const response = await api.getSRTConnections();
             this.connections = response?.items || [];
+            this.failureCount = 0; // Reset failure count on success
             this.renderConnections();
         } catch (error) {
             // Silent fail - connections might not be available
+            this.failureCount++;
             this.connections = [];
             this.renderConnections();
+            
+            // Stop auto-refresh after multiple failures to avoid unnecessary API calls
+            if (this.failureCount >= this.maxFailures) {
+                this.stopAutoRefresh();
+            }
         }
     }
 

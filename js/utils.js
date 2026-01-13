@@ -123,13 +123,14 @@ export function validateSRTURL(url) {
         return { valid: false, error: 'SRT URL must start with srt://' };
     }
     
-    try {
-        // Basic URL validation
-        new URL(url);
-        return { valid: true, error: '' };
-    } catch (e) {
-        return { valid: false, error: 'Invalid SRT URL format' };
+    // Custom SRT URL validation
+    // Format: srt://host:port or srt://host:port?params
+    const srtPattern = /^srt:\/\/[\w.-]+(:\d+)?(\?[\w=&.-]+)?$/;
+    if (!srtPattern.test(url)) {
+        return { valid: false, error: 'Invalid SRT URL format. Expected: srt://host:port or srt://0.0.0.0:10000?mode=listener' };
     }
+    
+    return { valid: true, error: '' };
 }
 
 /**
