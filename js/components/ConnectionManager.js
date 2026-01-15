@@ -1,6 +1,6 @@
 /**
  * ConnectionManager Component
- * Displays and manages SRT connections
+ * Displays and manages SRT connections with IN/OUT separation
  */
 
 import api from '../api.js';
@@ -13,6 +13,7 @@ class ConnectionManager {
         this.refreshInterval = null;
         this.failureCount = 0;
         this.maxFailures = 3;
+        this.currentFilter = 'all'; // 'all', 'in', 'out'
         this.render();
         this.loadConnections();
         this.startAutoRefresh();
@@ -20,9 +21,46 @@ class ConnectionManager {
 
     render() {
         this.container.innerHTML = `
-            <h2>Active SRT Connections</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">Active SRT Connections</h2>
+                <div class="connection-filters">
+                    <button id="filter-all" class="btn btn-secondary btn-small ${this.currentFilter === 'all' ? 'active' : ''}">
+                        All
+                    </button>
+                    <button id="filter-in" class="btn btn-secondary btn-small ${this.currentFilter === 'in' ? 'active' : ''}">
+                        IN (Listener)
+                    </button>
+                    <button id="filter-out" class="btn btn-secondary btn-small ${this.currentFilter === 'out' ? 'active' : ''}">
+                        OUT (Caller)
+                    </button>
+                </div>
+            </div>
             <div id="connections-list"></div>
         `;
+        
+        this.attachFilterListeners();
+    }
+
+    attachFilterListeners() {
+        const filterAll = document.getElementById('filter-all');
+        const filterIn = document.getElementById('filter-in');
+        const filterOut = document.getElementById('filter-out');
+        
+        if (filterAll) {
+            filterAll.addEventListener('click', () => this.setFilter('all'));
+        }
+        if (filterIn) {
+            filterIn.addEventListener('click', () => this.setFilter('in'));
+        }
+        if (filterOut) {
+            filterOut.addEventListener('click', () => this.setFilter('out'));
+        }
+    }
+
+    setFilter(filter) {
+        this.currentFilter = filter;
+        this.render();
+        this.renderConnections();
     }
 
     async loadConnections() {
@@ -44,6 +82,44 @@ class ConnectionManager {
         }
     }
 
+    /**
+     * Determine connection type (IN/OUT) based on state
+     * MediaMTX SRT connections have a 'state' field that indicates direction
+     */
+    getConnectionType(connection) {
+        // In MediaMTX, the state field can be:
+        // - "read" or "publish" (from perspective of path)
+        // For SRT specifically, we check if it's a listener (IN) or caller (OUT)
+        
+        // Check the connection state or URL parameters
+        if (connection.state) {
+            // If state contains "read", it's incoming (listener)
+            if (connection.state.toLowerCase().includes('read')) {
+                return 'IN';
+            }
+            // If state contains "publish", it's outgoing (caller)
+            if (connection.state.toLowerCase().includes('publish')) {
+                return 'OUT';
+            }
+        }
+        
+        // Fallback: check the remote address pattern
+        // Listeners typically have remote addresses, callers might not
+        if (connection.remoteAddr) {
+            return 'IN'; // Has remote connection, likely listener
+        }
+        
+        return 'OUT'; // Default to OUT
+    }
+
+    /**
+     * Get path/channel from connection
+     */
+    getConnectionPath(connection) {
+        // MediaMTX connections should have a path field
+        return connection.path || 'Unknown';
+    }
+
     renderConnections() {
         const listContainer = document.getElementById('connections-list');
         
@@ -57,14 +133,44 @@ class ConnectionManager {
             return;
         }
 
+        // Filter connections based on current filter
+        let filteredConnections = this.connections;
+        if (this.currentFilter === 'in') {
+            filteredConnections = this.connections.filter(conn => this.getConnectionType(conn) === 'IN');
+        } else if (this.currentFilter === 'out') {
+            filteredConnections = this.connections.filter(conn => this.getConnectionType(conn) === 'OUT');
+        }
+
+        if (filteredConnections.length === 0) {
+            listContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔌</div>
+                    <p>No ${this.currentFilter.toUpperCase()} connections</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Group connections by path
+        const groupedByPath = {};
+        filteredConnections.forEach(conn => {
+            const path = this.getConnectionPath(conn);
+            if (!groupedByPath[path]) {
+                groupedByPath[path] = [];
+            }
+            groupedByPath[path].push(conn);
+        });
+
         listContainer.innerHTML = `
-            <div class="connection-list">
-                ${this.connections.map(conn => this.renderConnectionItem(conn)).join('')}
+            <div class="connection-groups">
+                ${Object.entries(groupedByPath).map(([path, conns]) => 
+                    this.renderConnectionGroup(path, conns)
+                ).join('')}
             </div>
         `;
 
         // Attach event listeners for kick buttons
-        this.connections.forEach(conn => {
+        filteredConnections.forEach(conn => {
             const kickBtn = document.getElementById(`kick-${conn.id}`);
             if (kickBtn) {
                 kickBtn.addEventListener('click', () => this.kickConnection(conn.id));
@@ -72,17 +178,39 @@ class ConnectionManager {
         });
     }
 
+    renderConnectionGroup(path, connections) {
+        return `
+            <div class="connection-group">
+                <div class="connection-group-header">
+                    <h4>Channel: ${escapeHtml(path)}</h4>
+                    <span class="connection-count">${connections.length} connection${connections.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div class="connection-list">
+                    ${connections.map(conn => this.renderConnectionItem(conn)).join('')}
+                </div>
+            </div>
+        `;
+    }
+
     renderConnectionItem(connection) {
+        const type = this.getConnectionType(connection);
+        const typeClass = type === 'IN' ? 'type-in' : 'type-out';
+        const typeColor = type === 'IN' ? 'var(--success-color)' : 'var(--primary-color)';
+        
         return `
             <div class="connection-item">
                 <div class="connection-info">
-                    <div class="connection-id">
-                        ID: ${escapeHtml(connection.id || 'Unknown')}
+                    <div class="connection-id-row">
+                        <span class="connection-id">ID: ${escapeHtml(connection.id || 'Unknown')}</span>
+                        <span class="connection-type-badge ${typeClass}" style="background-color: ${typeColor}">
+                            ${type}
+                        </span>
                         <span class="connection-status active">Active</span>
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
-                        ${connection.remoteAddr ? `Remote: ${escapeHtml(connection.remoteAddr)}` : ''}
-                        ${connection.created ? `| Connected: ${formatDate(connection.created)}` : ''}
+                    <div class="connection-details">
+                        ${connection.remoteAddr ? `<span>Remote: ${escapeHtml(connection.remoteAddr)}</span>` : ''}
+                        ${connection.state ? `<span>State: ${escapeHtml(connection.state)}</span>` : ''}
+                        ${connection.created ? `<span>Connected: ${formatDate(connection.created)}</span>` : ''}
                     </div>
                 </div>
                 <button id="kick-${escapeHtml(connection.id)}" class="btn btn-danger btn-small">

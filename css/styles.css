@@ -22,6 +22,18 @@ body {
     background-color: var(--dark-bg);
     color: var(--text-color);
     line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Smooth transitions */
+a, button, input, select, textarea {
+    transition: all 0.2s ease;
+}
+
+/* Focus styles */
+input:focus, select:focus, textarea:focus, button:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 .header {
@@ -51,6 +63,18 @@ body {
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     border: 1px solid var(--border-color);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .card h2 {
@@ -432,28 +456,118 @@ body {
 }
 
 /* Connection List */
-.connection-list {
+.connection-filters {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.connection-filters .btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.connection-groups {
     margin-top: 1rem;
 }
 
-.connection-item {
+.connection-group {
     background-color: var(--dark-bg);
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.connection-group-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.connection-group-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.connection-count {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background-color: var(--card-bg);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+}
+
+.connection-list {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.connection-item {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.2s ease;
+}
+
+.connection-item:hover {
+    border-color: var(--primary-color);
 }
 
 .connection-info {
     flex: 1;
 }
 
+.connection-id-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
 .connection-id {
     font-weight: 500;
     color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.connection-type-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.connection-type-badge.type-in {
+    background-color: var(--success-color);
+}
+
+.connection-type-badge.type-out {
+    background-color: var(--primary-color);
+}
+
+.connection-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.connection-details span {
+    display: inline-block;
 }
 
 .connection-status {
@@ -648,7 +762,16 @@ body {
         align-items: flex-start;
     }
 
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+
     .channels-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .servers-grid {
         grid-template-columns: 1fr;
     }
 
@@ -659,6 +782,24 @@ body {
 
     .toast {
         max-width: 100%;
+    }
+
+    .connection-filters {
+        flex-wrap: wrap;
+    }
+
+    .connection-details {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .server-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .login-card {
+        padding: 2rem 1.5rem;
     }
 }
 
