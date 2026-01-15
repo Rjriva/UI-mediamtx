@@ -1,6 +1,6 @@
 /**
  * ChannelForm Component
- * Form to create new SRT channels
+ * Form to create and edit SRT channels
  */
 
 import api from '../api.js';
@@ -9,13 +9,24 @@ import { showToast, showLoading, hideLoading, validateChannelName, validateSRTUR
 class ChannelForm {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
+        this.isEditMode = false;
+        this.editingChannelName = null;
         this.render();
         this.attachEventListeners();
+        
+        // Listen for edit channel events
+        window.addEventListener('edit-channel', (e) => {
+            this.editChannel(e.detail.channelName);
+        });
     }
 
     render() {
+        const titleText = this.isEditMode ? 'Edit SRT Channel' : 'Create New SRT Channel';
+        const buttonText = this.isEditMode ? 'Update Channel' : 'Create Channel';
+        const buttonClass = this.isEditMode ? 'btn-primary' : 'btn-success';
+        
         this.container.innerHTML = `
-            <h2>Create New SRT Channel</h2>
+            <h2>${titleText}</h2>
             <form id="channel-form">
                 <div class="form-group">
                     <label for="channel-name">Channel Name / ID</label>
@@ -24,6 +35,7 @@ class ChannelForm {
                         id="channel-name" 
                         placeholder="my-channel" 
                         required
+                        ${this.isEditMode ? 'disabled' : ''}
                     >
                     <small>Alphanumeric characters, underscores, and hyphens only</small>
                     <div id="channel-name-error" class="error"></div>
@@ -61,8 +73,10 @@ class ChannelForm {
                     <small>Password required to publish to this channel</small>
                 </div>
                 
-                <button type="submit" class="btn btn-success">Create Channel</button>
-                <button type="button" id="reset-form" class="btn btn-secondary">Reset</button>
+                <button type="submit" class="btn ${buttonClass}">${buttonText}</button>
+                <button type="button" id="reset-form" class="btn btn-secondary">
+                    ${this.isEditMode ? 'Cancel' : 'Reset'}
+                </button>
             </form>
         `;
     }
@@ -74,17 +88,27 @@ class ChannelForm {
         const sourceInput = document.getElementById('channel-source');
 
         // Real-time validation
-        nameInput.addEventListener('blur', () => this.validateName());
+        if (!this.isEditMode) {
+            nameInput.addEventListener('blur', () => this.validateName());
+        }
         sourceInput.addEventListener('blur', () => this.validateSource());
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await this.createChannel();
+            if (this.isEditMode) {
+                await this.updateChannel();
+            } else {
+                await this.createChannel();
+            }
         });
 
         resetBtn.addEventListener('click', () => {
-            form.reset();
-            this.clearErrors();
+            if (this.isEditMode) {
+                this.cancelEdit();
+            } else {
+                form.reset();
+                this.clearErrors();
+            }
         });
     }
 
@@ -171,6 +195,87 @@ class ChannelForm {
         } finally {
             hideLoading();
         }
+    }
+
+    async editChannel(channelName) {
+        showLoading();
+        try {
+            const channelData = await api.getPath(channelName);
+            
+            this.isEditMode = true;
+            this.editingChannelName = channelName;
+            this.render();
+            this.attachEventListeners();
+            
+            // Populate form with channel data
+            document.getElementById('channel-name').value = channelName;
+            document.getElementById('channel-source').value = channelData.source || '';
+            document.getElementById('channel-publish-user').value = channelData.publishUser || '';
+            document.getElementById('channel-publish-password').value = channelData.publishPass || '';
+            
+            // Scroll to form
+            this.container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            showToast(`Editing channel: ${channelName}`, 'info');
+        } catch (error) {
+            showToast(`Failed to load channel data: ${error.message}`, 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async updateChannel() {
+        // Validate inputs
+        const sourceValid = this.validateSource();
+        
+        if (!sourceValid) {
+            showToast('Please fix the validation errors', 'error');
+            return;
+        }
+
+        const source = document.getElementById('channel-source').value.trim();
+        const publishUser = document.getElementById('channel-publish-user').value.trim();
+        const publishPassword = document.getElementById('channel-publish-password').value.trim();
+
+        // Build path configuration
+        const config = {
+            source: source
+        };
+
+        // Add authentication if provided
+        if (publishUser) {
+            config.publishUser = publishUser;
+        }
+        if (publishPassword) {
+            config.publishPass = publishPassword;
+        }
+
+        showLoading();
+        try {
+            await api.updatePath(this.editingChannelName, config);
+            showToast(`Channel "${this.editingChannelName}" updated successfully`, 'success');
+            
+            // Reset to create mode
+            this.cancelEdit();
+            
+            // Trigger refresh of channel list
+            window.dispatchEvent(new CustomEvent('channel-updated'));
+        } catch (error) {
+            showToast(`Failed to update channel: ${error.message}`, 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    cancelEdit() {
+        this.isEditMode = false;
+        this.editingChannelName = null;
+        this.render();
+        this.attachEventListeners();
+        
+        // Clear form
+        document.getElementById('channel-form').reset();
+        this.clearErrors();
     }
 }
 
