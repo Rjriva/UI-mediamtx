@@ -5,20 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UI-mediamtx - MediaMTX Control Panel</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- HLS.js for video streaming -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 </head>
 <body>
+    <!-- Login Container -->
+    <div id="login-container" style="display: none;"></div>
+    
+    <!-- Main Application -->
     <div id="app">
-        <header class="header">
-            <h1>MediaMTX Control Panel</h1>
-            <div id="server-status"></div>
-        </header>
-        
-        <main class="container">
-            <div id="server-config" class="card"></div>
-            <div id="channel-form" class="card"></div>
-            <div id="stream-viewer" class="card"></div>
-            <div id="connection-manager" class="card"></div>
-        </main>
+        <div id="main-app" style="display: none;">
+            <header class="header">
+                <div class="header-left">
+                    <h1>📺 MediaMTX Control Panel</h1>
+                </div>
+                <div class="header-right">
+                    <div id="server-status"></div>
+                    <div id="user-info" class="user-info"></div>
+                    <button id="logout-btn" class="btn btn-secondary btn-small">Logout</button>
+                </div>
+            </header>
+            
+            <main class="container">
+                <div id="server-config" class="card"></div>
+                <div id="channel-form" class="card"></div>
+                <div id="stream-viewer" class="card"></div>
+                <div id="connection-manager" class="card"></div>
+            </main>
+        </div>
     </div>
 
     <!-- Toast notification container -->
@@ -42,13 +58,23 @@
     </div>
 
     <!-- Scripts -->
+    <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/api.js"></script>
     <script type="module" src="js/utils.js"></script>
+    <script type="module" src="js/components/Login.js"></script>
     <script type="module" src="js/components/ServerConfig.js"></script>
     <script type="module" src="js/components/ChannelForm.js"></script>
     <script type="module" src="js/components/ChannelActions.js"></script>
     <script type="module" src="js/components/ConnectionManager.js"></script>
     <script type="module" src="js/components/StreamViewer.js"></script>
     <script type="module" src="js/app.js"></script>
+    <script>
+        // Initialize Feather icons after page load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        });
+    </script>
 </body>
 </html>
