@@ -4,6 +4,7 @@
 
 import auth from './auth.js';
 import Login from './components/Login.js';
+import ServerManager from './components/ServerManager.js';
 import ServerConfig from './components/ServerConfig.js';
 import ChannelForm from './components/ChannelForm.js';
 import StreamViewer from './components/StreamViewer.js';
@@ -62,6 +63,7 @@ function initializeMainApp() {
     updateUserInfo();
     
     // Initialize components
+    const serverManager = new ServerManager('server-manager');
     const serverConfig = new ServerConfig('server-config');
     const channelForm = new ChannelForm('channel-form');
     const streamViewer = new StreamViewer('stream-viewer');
@@ -69,6 +71,7 @@ function initializeMainApp() {
 
     // Store components globally for debugging
     window.app = {
+        serverManager,
         serverConfig,
         channelForm,
         streamViewer,
@@ -80,6 +83,13 @@ function initializeMainApp() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleLogout);
     }
+    
+    // Listen for server changes to refresh components
+    window.addEventListener('server-changed', () => {
+        // Refresh all components when server changes
+        streamViewer.loadChannels();
+        connectionManager.loadConnections();
+    });
 
     console.log('UI-mediamtx application initialized');
 }
