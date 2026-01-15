@@ -6,6 +6,21 @@
 import api from '../api.js';
 import { escapeHtml } from '../utils.js';
 
+// HLS Configuration Constants
+const HLS_CONFIG = {
+    enableWorker: true,
+    lowLatencyMode: true,
+    backBufferLength: 90,
+    maxBufferLength: 10,
+    maxMaxBufferLength: 20,
+    manifestLoadingMaxRetry: 3,
+    levelLoadingMaxRetry: 3,
+    fragLoadingMaxRetry: 3,
+};
+
+// Default HLS port - can be overridden via server configuration
+const DEFAULT_HLS_PORT = 8888;
+
 class StreamPreview {
     constructor(channelName, containerId, visible = true) {
         this.channelName = channelName;
@@ -47,9 +62,10 @@ class StreamPreview {
 
         // Build HLS URL
         // MediaMTX serves HLS at: http://server:port/channelName/index.m3u8
-        // We need to extract the base URL and construct the HLS endpoint
+        // Extract the base URL and construct the HLS endpoint
+        // TODO: Make HLS port configurable per server
         const serverUrl = config.baseUrl.replace(/:\d+$/, ''); // Remove API port
-        const hlsUrl = `${serverUrl}:8888/${this.channelName}/index.m3u8`;
+        const hlsUrl = `${serverUrl}:${DEFAULT_HLS_PORT}/${this.channelName}/index.m3u8`;
 
         container.innerHTML = `
             <div class="stream-preview-container">
@@ -82,16 +98,7 @@ class StreamPreview {
 
         // Check if HLS.js is supported
         if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-            this.hls = new Hls({
-                enableWorker: true,
-                lowLatencyMode: true,
-                backBufferLength: 90,
-                maxBufferLength: 10,
-                maxMaxBufferLength: 20,
-                manifestLoadingMaxRetry: 3,
-                levelLoadingMaxRetry: 3,
-                fragLoadingMaxRetry: 3,
-            });
+            this.hls = new Hls(HLS_CONFIG);
 
             this.hls.loadSource(hlsUrl);
             this.hls.attachMedia(this.videoElement);

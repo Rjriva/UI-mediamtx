@@ -58,9 +58,10 @@ class ChannelActions {
             // Create a new name for the duplicate
             let newName = `${channelName}_copy`;
             let counter = 1;
+            const maxAttempts = 100; // Prevent infinite loop
             
             // Check if the name already exists, if so, add a number
-            while (true) {
+            while (counter < maxAttempts) {
                 try {
                     await api.getPath(newName);
                     // If we get here, the name exists, try another
@@ -70,6 +71,10 @@ class ChannelActions {
                     // Name doesn't exist, we can use it
                     break;
                 }
+            }
+            
+            if (counter >= maxAttempts) {
+                throw new Error('Unable to generate unique channel name after maximum attempts');
             }
             
             // Create the duplicate

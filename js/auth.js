@@ -109,11 +109,13 @@ class AuthService {
     }
 
     /**
-     * Generate random token
-     * @returns {string} - Random token
+     * Generate random token using crypto.getRandomValues
+     * @returns {string} - Cryptographically secure random token
      */
     generateToken() {
-        return Math.random().toString(36).substring(2) + Date.now().toString(36);
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
     }
 
     /**
