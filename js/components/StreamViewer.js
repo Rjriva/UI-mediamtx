@@ -32,9 +32,10 @@ class StreamViewer {
             refreshBtn.addEventListener('click', () => this.loadChannels());
         }
 
-        // Listen for channel creation/deletion events
+        // Listen for channel creation/deletion/update events
         window.addEventListener('channel-created', () => this.loadChannels());
         window.addEventListener('channel-deleted', () => this.loadChannels());
+        window.addEventListener('channel-updated', () => this.loadChannels());
         window.addEventListener('server-connected', () => this.loadChannels());
     }
 
@@ -82,13 +83,20 @@ class StreamViewer {
             </div>
         `;
 
-        // Attach delete button event listeners
+        // Attach button event listeners
         this.channels.forEach(channel => {
             const safeId = channel.name.replace(/[^a-zA-Z0-9_-]/g, '_');
             const deleteBtn = document.getElementById(`delete-${safeId}`);
+            const editBtn = document.getElementById(`edit-${safeId}`);
+            
             if (deleteBtn) {
                 deleteBtn.addEventListener('click', () => {
                     ChannelActions.deleteChannel(channel.name);
+                });
+            }
+            if (editBtn) {
+                editBtn.addEventListener('click', () => {
+                    ChannelActions.editChannel(channel.name);
                 });
             }
         });
@@ -123,8 +131,11 @@ class StreamViewer {
                 </div>
                 
                 <div class="channel-actions">
+                    <button id="edit-${safeId}" class="btn btn-primary btn-small">
+                        Edit
+                    </button>
                     <button id="delete-${safeId}" class="btn btn-danger btn-small">
-                        Delete Channel
+                        Delete
                     </button>
                 </div>
             </div>
