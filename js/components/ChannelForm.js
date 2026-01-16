@@ -141,6 +141,10 @@ class ChannelForm {
             sourceInput.value = ''; // Clear source when switching to listener
         } else if (mode === 'caller') {
             sourceFieldGroup.style.display = 'block';
+        } else {
+            // Default to listener mode for any unexpected values
+            sourceFieldGroup.style.display = 'none';
+            sourceInput.value = '';
         }
     }
 
@@ -350,6 +354,9 @@ class ChannelForm {
         // Clear form
         document.getElementById('channel-form').reset();
         this.clearErrors();
+        
+        // Ensure visibility state is correct after reset
+        this.updateSourceFieldVisibility();
     }
 }
 
