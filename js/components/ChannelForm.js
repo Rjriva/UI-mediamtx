@@ -208,7 +208,7 @@ class ChannelForm {
         const config = {};
         
         // CRITICAL: Only add source parameter in caller mode
-        if (srtMode === 'caller' && source) {
+        if (srtMode === 'caller') {
             config.source = source;
         }
         
@@ -304,7 +304,7 @@ class ChannelForm {
         const config = {};
         
         // CRITICAL: Only add source parameter in caller mode
-        if (srtMode === 'caller' && source) {
+        if (srtMode === 'caller') {
             config.source = source;
         }
         
