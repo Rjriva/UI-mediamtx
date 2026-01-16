@@ -42,14 +42,22 @@ class ChannelForm {
                 </div>
                 
                 <div class="form-group">
+                    <label for="srt-mode">SRT Mode</label>
+                    <select id="srt-mode" required>
+                        <option value="listener">Listener (Recommended) - Wait for incoming connections</option>
+                        <option value="caller">Caller - Connect to remote source</option>
+                    </select>
+                    <small>Listener: MediaMTX receives connections. Caller: MediaMTX connects to external source.</small>
+                </div>
+                
+                <div class="form-group" id="source-field-group">
                     <label for="channel-source">SRT Source URL</label>
                     <input 
                         type="text" 
                         id="channel-source" 
-                        placeholder="srt://0.0.0.0:10000?mode=listener" 
-                        required
+                        placeholder="srt://192.168.1.100:9000" 
                     >
-                    <small>Example: srt://0.0.0.0:10000?mode=listener or srt://host:port</small>
+                    <small>Example: srt://remote-host:9000 (required for Caller mode)</small>
                     <div id="channel-source-error" class="error"></div>
                 </div>
                 
@@ -86,6 +94,13 @@ class ChannelForm {
         const resetBtn = document.getElementById('reset-form');
         const nameInput = document.getElementById('channel-name');
         const sourceInput = document.getElementById('channel-source');
+        const srtModeSelect = document.getElementById('srt-mode');
+
+        // Handle SRT mode change to show/hide source field
+        srtModeSelect.addEventListener('change', () => this.updateSourceFieldVisibility());
+        
+        // Initialize visibility on load
+        this.updateSourceFieldVisibility();
 
         // Real-time validation
         if (!this.isEditMode) {
@@ -108,8 +123,29 @@ class ChannelForm {
             } else {
                 form.reset();
                 this.clearErrors();
+                this.updateSourceFieldVisibility(); // Reset visibility after reset
             }
         });
+    }
+
+    updateSourceFieldVisibility() {
+        const srtModeSelect = document.getElementById('srt-mode');
+        const sourceFieldGroup = document.getElementById('source-field-group');
+        const sourceInput = document.getElementById('channel-source');
+        
+        if (!srtModeSelect || !sourceFieldGroup || !sourceInput) return;
+        
+        const mode = srtModeSelect.value;
+        if (mode === 'listener') {
+            sourceFieldGroup.style.display = 'none';
+            sourceInput.value = ''; // Clear source when switching to listener
+        } else if (mode === 'caller') {
+            sourceFieldGroup.style.display = 'block';
+        } else {
+            // Default to listener mode for any unexpected values
+            sourceFieldGroup.style.display = 'none';
+            sourceInput.value = '';
+        }
     }
 
     validateName() {
@@ -129,8 +165,22 @@ class ChannelForm {
     }
 
     validateSource() {
+        const srtModeSelect = document.getElementById('srt-mode');
         const sourceInput = document.getElementById('channel-source');
         const errorDiv = document.getElementById('channel-source-error');
+        
+        if (!srtModeSelect || !sourceInput || !errorDiv) return true;
+        
+        const srtMode = srtModeSelect.value;
+        
+        // In listener mode, source is not required, so skip validation
+        if (srtMode === 'listener') {
+            errorDiv.textContent = '';
+            sourceInput.style.borderColor = '';
+            return true;
+        }
+        
+        // In caller mode, source is required and must be valid
         const validation = validateSRTURL(sourceInput.value);
         
         if (!validation.valid) {
@@ -162,15 +212,19 @@ class ChannelForm {
         }
 
         const name = document.getElementById('channel-name').value.trim();
+        const srtMode = document.getElementById('srt-mode').value;
         const source = document.getElementById('channel-source').value.trim();
         const publishUser = document.getElementById('channel-publish-user').value.trim();
         const publishPassword = document.getElementById('channel-publish-password').value.trim();
 
-        // Build path configuration
-        const config = {
-            source: source
-        };
-
+        // Build path configuration - only include source for caller mode
+        const config = {};
+        
+        // CRITICAL: Only add source parameter in caller mode
+        if (srtMode === 'caller') {
+            config.source = source;
+        }
+        
         // Add authentication if provided
         if (publishUser) {
             config.publishUser = publishUser;
@@ -187,6 +241,9 @@ class ChannelForm {
             // Reset form
             document.getElementById('channel-form').reset();
             this.clearErrors();
+            
+            // Reset visibility after form reset
+            this.updateSourceFieldVisibility();
             
             // Trigger refresh of channel list
             window.dispatchEvent(new CustomEvent('channel-created'));
@@ -209,7 +266,24 @@ class ChannelForm {
             
             // Populate form with channel data
             document.getElementById('channel-name').value = channelName;
-            document.getElementById('channel-source').value = channelData.source || '';
+            
+            // Determine mode based on whether source exists
+            const srtModeSelect = document.getElementById('srt-mode');
+            const sourceInput = document.getElementById('channel-source');
+            const sourceFieldGroup = document.getElementById('source-field-group');
+            
+            if (channelData.source && channelData.source.trim() !== '') {
+                // Has a source - must be caller mode
+                srtModeSelect.value = 'caller';
+                sourceInput.value = channelData.source;
+                sourceFieldGroup.style.display = 'block';
+            } else {
+                // No source - listener mode
+                srtModeSelect.value = 'listener';
+                sourceInput.value = '';
+                sourceFieldGroup.style.display = 'none';
+            }
+            
             document.getElementById('channel-publish-user').value = channelData.publishUser || '';
             document.getElementById('channel-publish-password').value = channelData.publishPass || '';
             
@@ -233,15 +307,19 @@ class ChannelForm {
             return;
         }
 
+        const srtMode = document.getElementById('srt-mode').value;
         const source = document.getElementById('channel-source').value.trim();
         const publishUser = document.getElementById('channel-publish-user').value.trim();
         const publishPassword = document.getElementById('channel-publish-password').value.trim();
 
-        // Build path configuration
-        const config = {
-            source: source
-        };
-
+        // Build path configuration - only include source for caller mode
+        const config = {};
+        
+        // CRITICAL: Only add source parameter in caller mode
+        if (srtMode === 'caller') {
+            config.source = source;
+        }
+        
         // Add authentication if provided
         if (publishUser) {
             config.publishUser = publishUser;
@@ -276,6 +354,9 @@ class ChannelForm {
         // Clear form
         document.getElementById('channel-form').reset();
         this.clearErrors();
+        
+        // Ensure visibility state is correct after reset
+        this.updateSourceFieldVisibility();
     }
 }
 

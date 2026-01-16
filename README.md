@@ -147,11 +147,32 @@ If you're running the UI on a different domain than MediaMTX, you may need to co
 5. Edit or delete servers using the respective buttons
 
 ### 3. Create SRT Channel
+
+#### SRT Channel Modes
+
+When creating SRT channels, you can choose between two modes:
+
+**Listener Mode** (Default - Recommended):
+- MediaMTX waits for incoming SRT connections
+- Use when encoders/cameras push TO your MediaMTX server
+- No source URL needed
+- Publishers connect to: `srt://your-server-ip:port?streamid=channel-name`
+
+**Caller Mode** (Advanced):
+- MediaMTX actively connects to a remote SRT source
+- Use when pulling streams FROM another SRT server
+- Requires source URL (e.g., `srt://remote-host:9000`)
+
+#### Creating a Channel
+
 1. Scroll to "Create New SRT Channel" section
 2. Enter a unique channel name (alphanumeric, underscores, hyphens)
-3. Enter the SRT source URL (e.g., `srt://0.0.0.0:10000?mode=listener`)
-4. Optionally set publish user/password for authentication
-5. Click "Create Channel"
+3. Select SRT Mode:
+   - **Listener**: For receiving incoming SRT streams (most common)
+   - **Caller**: For connecting to a remote SRT source
+4. For Caller mode only: Enter the SRT source URL (e.g., `srt://192.168.1.100:9000`)
+5. Optionally set publish user/password for authentication
+6. Click "Create Channel"
 
 ### 4. Edit Channel
 1. Find the channel in the list
