@@ -95,23 +95,12 @@ class ChannelForm {
         const nameInput = document.getElementById('channel-name');
         const sourceInput = document.getElementById('channel-source');
         const srtModeSelect = document.getElementById('srt-mode');
-        const sourceFieldGroup = document.getElementById('source-field-group');
 
         // Handle SRT mode change to show/hide source field
-        const updateSourceFieldVisibility = () => {
-            const mode = srtModeSelect.value;
-            if (mode === 'listener') {
-                sourceFieldGroup.style.display = 'none';
-                sourceInput.value = ''; // Clear source when switching to listener
-            } else {
-                sourceFieldGroup.style.display = 'block';
-            }
-        };
-
-        srtModeSelect.addEventListener('change', updateSourceFieldVisibility);
+        srtModeSelect.addEventListener('change', () => this.updateSourceFieldVisibility());
         
         // Initialize visibility on load
-        updateSourceFieldVisibility();
+        this.updateSourceFieldVisibility();
 
         // Real-time validation
         if (!this.isEditMode) {
@@ -134,9 +123,25 @@ class ChannelForm {
             } else {
                 form.reset();
                 this.clearErrors();
-                updateSourceFieldVisibility(); // Reset visibility after reset
+                this.updateSourceFieldVisibility(); // Reset visibility after reset
             }
         });
+    }
+
+    updateSourceFieldVisibility() {
+        const srtModeSelect = document.getElementById('srt-mode');
+        const sourceFieldGroup = document.getElementById('source-field-group');
+        const sourceInput = document.getElementById('channel-source');
+        
+        if (!srtModeSelect || !sourceFieldGroup) return;
+        
+        const mode = srtModeSelect.value;
+        if (mode === 'listener') {
+            sourceFieldGroup.style.display = 'none';
+            sourceInput.value = ''; // Clear source when switching to listener
+        } else if (mode === 'caller') {
+            sourceFieldGroup.style.display = 'block';
+        }
     }
 
     validateName() {
@@ -230,8 +235,7 @@ class ChannelForm {
             this.clearErrors();
             
             // Reset visibility after form reset
-            const sourceFieldGroup = document.getElementById('source-field-group');
-            sourceFieldGroup.style.display = 'none';
+            this.updateSourceFieldVisibility();
             
             // Trigger refresh of channel list
             window.dispatchEvent(new CustomEvent('channel-created'));
