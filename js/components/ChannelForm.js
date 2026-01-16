@@ -133,7 +133,7 @@ class ChannelForm {
         const sourceFieldGroup = document.getElementById('source-field-group');
         const sourceInput = document.getElementById('channel-source');
         
-        if (!srtModeSelect || !sourceFieldGroup) return;
+        if (!srtModeSelect || !sourceFieldGroup || !sourceInput) return;
         
         const mode = srtModeSelect.value;
         if (mode === 'listener') {
@@ -161,9 +161,13 @@ class ChannelForm {
     }
 
     validateSource() {
-        const srtMode = document.getElementById('srt-mode').value;
+        const srtModeSelect = document.getElementById('srt-mode');
         const sourceInput = document.getElementById('channel-source');
         const errorDiv = document.getElementById('channel-source-error');
+        
+        if (!srtModeSelect || !sourceInput || !errorDiv) return true;
+        
+        const srtMode = srtModeSelect.value;
         
         // In listener mode, source is not required, so skip validation
         if (srtMode === 'listener') {
