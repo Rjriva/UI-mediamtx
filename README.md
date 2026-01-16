@@ -6,10 +6,11 @@ A modern, feature-rich web-based control panel for managing MediaMTX SRT (Secure
 
 ### 🔐 User Authentication
 - **Secure Login System**: Password-protected access to the control panel
-- **SHA-256 Password Hashing**: Passwords are hashed using Web Crypto API
+- **SHA-256 Password Hashing**: Passwords are hashed using pure JavaScript implementation
 - **Session Management**: Persistent sessions stored in localStorage
 - **Default Credentials**: `admin` / `admin123` (configurable)
 - **Logout Functionality**: Secure session termination
+- **HTTP Compatible**: Works over HTTP and HTTPS - no SSL certificate required
 
 ### 🌐 Multi-Server Management
 - **Multiple Server Support**: Manage multiple MediaMTX servers from one interface
@@ -223,13 +224,30 @@ UI-mediamtx/
 
 ## 🔒 Security Considerations
 
-- **Password Hashing**: Uses SHA-256 via Web Crypto API for password storage
+⚠️ **Important**: This application is designed for **personal and local network use**. 
+
+### Security Features
+- **Password Hashing**: Uses pure JavaScript SHA-256 implementation for password storage
 - **Session Management**: Sessions stored in localStorage with unique tokens
-- **CORS**: Ensure MediaMTX server allows requests from your UI domain
-- **HTTPS**: Use HTTPS in production for secure authentication
-- **Authentication**: Always use authentication credentials when exposing MediaMTX to the internet
 - **Input Validation**: All inputs are validated and sanitized to prevent XSS
 - **No Plaintext Passwords**: Passwords are never stored in plain text
+- **HTTP/HTTPS Compatible**: Works over both HTTP and HTTPS - no SSL certificate required
+
+### Network Security
+- **Local Use**: Designed for use on private/local networks
+- **CORS**: Ensure MediaMTX server allows requests from your UI domain
+- **Internet Exposure**: If exposing to the internet, use proper network security measures:
+  - VPN for remote access
+  - Firewall rules to restrict access
+  - Strong authentication credentials on MediaMTX
+  - Consider using a reverse proxy with HTTPS
+- **IP Access**: Application works over HTTP via IP addresses (e.g., `http://192.168.1.100:8080`)
+
+### Recommendations
+- Change default credentials immediately after first login
+- Use strong passwords for MediaMTX server authentication
+- Keep the application on a trusted network
+- Use HTTPS if deploying in production environments
 
 ## 🌐 Browser Compatibility
 
@@ -252,7 +270,7 @@ This is a vanilla JavaScript application with no build step required. Simply edi
 ### Key Technologies
 - **Vanilla JavaScript**: No frameworks, pure ES6+
 - **HLS.js**: For HTTP Live Streaming video playback
-- **Web Crypto API**: For secure password hashing
+- **Pure JS SHA-256**: For password hashing (no crypto.subtle dependency)
 - **Feather Icons**: For clean, consistent iconography
 - **CSS3**: Modern CSS with animations and transitions
 
