@@ -217,12 +217,14 @@ class ChannelForm {
         const publishUser = document.getElementById('channel-publish-user').value.trim();
         const publishPassword = document.getElementById('channel-publish-password').value.trim();
 
-        // Build path configuration - only include source for caller mode
+        // Build path configuration
         const config = {};
         
-        // CRITICAL: Only add source parameter in caller mode
+        // Set source based on mode
         if (srtMode === 'caller') {
             config.source = source;
+        } else if (srtMode === 'listener') {
+            config.source = 'publisher';
         }
         
         // Add authentication if provided
@@ -312,12 +314,14 @@ class ChannelForm {
         const publishUser = document.getElementById('channel-publish-user').value.trim();
         const publishPassword = document.getElementById('channel-publish-password').value.trim();
 
-        // Build path configuration - only include source for caller mode
+        // Build path configuration
         const config = {};
         
-        // CRITICAL: Only add source parameter in caller mode
+        // Set source based on mode
         if (srtMode === 'caller') {
             config.source = source;
+        } else if (srtMode === 'listener') {
+            config.source = 'publisher';
         }
         
         // Add authentication if provided
